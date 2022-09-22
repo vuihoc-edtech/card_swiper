@@ -32,6 +32,7 @@ enum SwiperLayout {
   STACK,
   TINDER,
   CUSTOM,
+  VH,
 }
 
 class Swiper extends StatefulWidget {
@@ -498,6 +499,21 @@ class _SwiperState extends _SwiperTimerMixin {
         scrollDirection: widget.scrollDirection,
         axisDirection: widget.axisDirection,
       );
+    } else if (widget.layout == SwiperLayout.VH) {
+      return _VHSwiper(
+        loop: widget.loop,
+        itemWidth: widget.itemWidth,
+        itemHeight: widget.itemHeight,
+        itemCount: widget.itemCount,
+        itemBuilder: itemBuilder,
+        index: _activeIndex,
+        curve: widget.curve,
+        duration: widget.duration,
+        onIndexChanged: _onIndexChanged,
+        controller: _controller,
+        scrollDirection: widget.scrollDirection,
+        axisDirection: widget.axisDirection,
+      );
     } else if (_isPageViewLayout()) {
       //default
       var transformer = widget.transformer;
@@ -796,6 +812,41 @@ class _StackSwiper extends _SubSwiper {
   State<StatefulWidget> createState() => _StackViewState();
 }
 
+class _VHSwiper extends _SubSwiper {
+  const _VHSwiper({
+    Key? key,
+    required Curve curve,
+    int? duration,
+    required SwiperController controller,
+    ValueChanged<int>? onIndexChanged,
+    double? itemHeight,
+    double? itemWidth,
+    IndexedWidgetBuilder? itemBuilder,
+    int? index,
+    required bool loop,
+    required int itemCount,
+    Axis? scrollDirection,
+    AxisDirection? axisDirection,
+  }) : super(
+          loop: loop,
+          key: key,
+          itemWidth: itemWidth,
+          itemHeight: itemHeight,
+          itemBuilder: itemBuilder,
+          curve: curve,
+          duration: duration,
+          controller: controller,
+          index: index,
+          onIndexChanged: onIndexChanged,
+          itemCount: itemCount,
+          scrollDirection: scrollDirection,
+          axisDirection: axisDirection,
+        );
+
+  @override
+  State<StatefulWidget> createState() => _VHViewState();
+}
+
 class _TinderState extends _CustomLayoutStateBase<_TinderSwiper> {
   late List<double> scales;
   late List<double> offsetsX;
@@ -946,6 +997,92 @@ class _StackViewState extends _CustomLayoutStateBase<_StackSwiper> {
             ? Offset(f, 0.0)
             : Offset(-f, 0.0)
         : Offset(0.0, f);
+
+    final alignment = widget.scrollDirection == Axis.horizontal
+        ? widget.axisDirection == AxisDirection.left
+            ? Alignment.centerLeft
+            : Alignment.centerRight
+        : Alignment.topCenter;
+
+    return Opacity(
+      opacity: o,
+      child: Transform.translate(
+        key: ValueKey<int>(_currentIndex + i),
+        offset: offset,
+        child: Transform.scale(
+          scale: s,
+          alignment: alignment,
+          child: SizedBox(
+            width: widget.itemWidth ?? double.infinity,
+            height: widget.itemHeight ?? double.infinity,
+            child: widget.itemBuilder!(context, realIndex),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VHViewState extends _CustomLayoutStateBase<_VHSwiper> {
+  late List<double> scales;
+  late List<double> offsetsX;
+  late List<double> offsetsY;
+  late List<double> opacity;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
+  void _updateValues() {
+    if (widget.scrollDirection == Axis.horizontal) {
+      final space = (_swiperWidth - widget.itemWidth!) / 2;
+      offsetsX = widget.axisDirection == AxisDirection.left
+          ? [-space, -space / 3 * 2, -space / 3, 0.0, _swiperWidth]
+          : [_swiperWidth, 10.0, 0, -10, 0];
+      if (widget.axisDirection == AxisDirection.right) {
+        offsetsY = [0.0, 0.0, -8.0, -16.0, -24.0];
+      }
+    } else {
+      final space = (_swiperHeight - widget.itemHeight!) / 2;
+      offsetsX = [-space, -space / 3 * 2, -space / 3, 0.0, _swiperHeight];
+    }
+  }
+
+  @override
+  void didUpdateWidget(_VHSwiper oldWidget) {
+    _updateValues();
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void afterRender() {
+    super.afterRender();
+    final isRightSide = widget.axisDirection == AxisDirection.right;
+    //length of the values array below
+    _animationCount = 5;
+
+    //Array below this line, '0' index is 1.0, which is the first item show in swiper.
+    _startIndex = isRightSide ? -1 : -3;
+    scales = isRightSide ? [1, 1, 1, 1, 1] : [0.7, 0.8, 0.9, 1.0, 1.0];
+    opacity =
+        isRightSide ? [1.0, 1.0, 1.0, 0.5, 0.0] : [0.0, 0.5, 1.0, 1.0, 1.0];
+
+    _updateValues();
+  }
+
+  @override
+  Widget _buildItem(int i, int realIndex, double animationValue) {
+    final s = _getValue(scales, animationValue, i);
+    final fx = _getValue(offsetsX, animationValue, i);
+    final fy = _getValue(offsetsY, animationValue, i);
+    final o = _getValue(opacity, animationValue, i);
+
+    final offset = widget.scrollDirection == Axis.horizontal
+        ? widget.axisDirection == AxisDirection.left
+            ? Offset(fx, fy)
+            : Offset(-fx, -fy)
+        : Offset(0.0, fy);
 
     final alignment = widget.scrollDirection == Axis.horizontal
         ? widget.axisDirection == AxisDirection.left
