@@ -32,7 +32,7 @@ enum SwiperLayout {
   STACK,
   TINDER,
   CUSTOM,
-  VH,
+  SLIDER,
 }
 
 class Swiper extends StatefulWidget {
@@ -499,8 +499,8 @@ class _SwiperState extends _SwiperTimerMixin {
         scrollDirection: widget.scrollDirection,
         axisDirection: widget.axisDirection,
       );
-    } else if (widget.layout == SwiperLayout.VH) {
-      return _VHSwiper(
+    } else if (widget.layout == SwiperLayout.SLIDER) {
+      return _SliderSwiper(
         loop: widget.loop,
         itemWidth: widget.itemWidth,
         itemHeight: widget.itemHeight,
@@ -812,8 +812,8 @@ class _StackSwiper extends _SubSwiper {
   State<StatefulWidget> createState() => _StackViewState();
 }
 
-class _VHSwiper extends _SubSwiper {
-  const _VHSwiper({
+class _SliderSwiper extends _SubSwiper {
+  const _SliderSwiper({
     Key? key,
     required Curve curve,
     int? duration,
@@ -844,7 +844,7 @@ class _VHSwiper extends _SubSwiper {
         );
 
   @override
-  State<StatefulWidget> createState() => _VHViewState();
+  State<StatefulWidget> createState() => _SliderViewState();
 }
 
 class _TinderState extends _CustomLayoutStateBase<_TinderSwiper> {
@@ -1023,7 +1023,7 @@ class _StackViewState extends _CustomLayoutStateBase<_StackSwiper> {
   }
 }
 
-class _VHViewState extends _CustomLayoutStateBase<_VHSwiper> {
+class _SliderViewState extends _CustomLayoutStateBase<_SliderSwiper> {
   late List<double> scales;
   late List<double> offsetsX;
   late List<double> offsetsY;
@@ -1035,22 +1035,12 @@ class _VHViewState extends _CustomLayoutStateBase<_VHSwiper> {
   }
 
   void _updateValues() {
-    if (widget.scrollDirection == Axis.horizontal) {
-      final space = (_swiperWidth - widget.itemWidth!) / 2;
-      offsetsX = widget.axisDirection == AxisDirection.left
-          ? [-space, -space / 3 * 2, -space / 3, 0.0, _swiperWidth]
-          : [_swiperWidth, 10.0, 0, -10, 0];
-      if (widget.axisDirection == AxisDirection.right) {
-        offsetsY = [0.0, 0.0, -8.0, -16.0, -24.0];
-      }
-    } else {
-      final space = (_swiperHeight - widget.itemHeight!) / 2;
-      offsetsX = [-space, -space / 3 * 2, -space / 3, 0.0, _swiperHeight];
-    }
+    offsetsX = [_swiperWidth, 10.0, 0, -10, 0];
+    offsetsY = [0.0, 0.0, -8.0, -16.0, -24.0];
   }
 
   @override
-  void didUpdateWidget(_VHSwiper oldWidget) {
+  void didUpdateWidget(_SliderSwiper oldWidget) {
     _updateValues();
     super.didUpdateWidget(oldWidget);
   }
@@ -1058,14 +1048,13 @@ class _VHViewState extends _CustomLayoutStateBase<_VHSwiper> {
   @override
   void afterRender() {
     super.afterRender();
-    final isRightSide = widget.axisDirection == AxisDirection.right;
     //length of the values array below
     _animationCount = 5;
 
     //Array below this line, '0' index is 1.0, which is the first item show in swiper.
-    _startIndex = isRightSide ? -1 : -3;
-    scales = isRightSide ? [1, 1, 1, 1, 1] : [0.7, 0.8, 0.9, 1.0, 1.0];
-    opacity = isRightSide ? [1.0, 1.0, 1.0, 1, 0.0] : [0.0, 0.5, 1.0, 1.0, 1.0];
+    _startIndex = -1;
+    scales = [1, 1, 1, 1, 1];
+    opacity = [1.0, 1.0, 1.0, 1, 0.0];
 
     _updateValues();
   }
@@ -1077,26 +1066,14 @@ class _VHViewState extends _CustomLayoutStateBase<_VHSwiper> {
     final fy = _getValue(offsetsY, animationValue, i);
     final o = _getValue(opacity, animationValue, i);
 
-    final offset = widget.scrollDirection == Axis.horizontal
-        ? widget.axisDirection == AxisDirection.left
-            ? Offset(fx, fy)
-            : Offset(-fx, -fy)
-        : Offset(0.0, fy);
-
-    final alignment = widget.scrollDirection == Axis.horizontal
-        ? widget.axisDirection == AxisDirection.left
-            ? Alignment.centerLeft
-            : Alignment.centerRight
-        : Alignment.topCenter;
-
     return Opacity(
       opacity: o,
       child: Transform.translate(
         key: ValueKey<int>(_currentIndex + i),
-        offset: offset,
+        offset: Offset(-fx, -fy),
         child: Transform.scale(
           scale: s,
-          alignment: alignment,
+          alignment: Alignment.centerRight,
           child: SizedBox(
             width: widget.itemWidth ?? double.infinity,
             height: widget.itemHeight ?? double.infinity,
