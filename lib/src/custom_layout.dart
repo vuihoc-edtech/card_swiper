@@ -2,14 +2,15 @@ part of 'swiper.dart';
 
 abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
     with SingleTickerProviderStateMixin {
-  late double _swiperWidth;
-  late double _swiperHeight;
+  double _swiperWidth = 0;
+  double _swiperHeight = 0;
   late Animation<double> _animation;
   late AnimationController _animationController;
   SwiperController get _controller => widget.controller;
   late int _startIndex;
   int? _animationCount;
   int _currentIndex = 0;
+  bool _isPortrait = true;
 
   @override
   void initState() {
@@ -46,9 +47,19 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
   void afterRender() {
     final renderObject = context.findRenderObject()!;
     final size = renderObject.paintBounds.size;
-    _swiperWidth = size.width;
-    _swiperHeight = size.height;
-    setState(() {});
+    if (_calculateSwiperSize()) {
+      setState(() {});
+    }
+  }
+
+  bool _calculateSwiperSize() {
+    if (_swiperWidth != size.width || _swiperHeight != size.height) {
+      _swiperWidth = size.width;
+      _swiperHeight = size.height;
+      return true;
+    }
+
+    return false;
   }
 
   @override
@@ -131,6 +142,12 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
   Widget build(BuildContext context) {
     if (_animationCount == null) {
       return Container();
+    }
+    final size = MediaQuery.of(context).size;
+    final isPortrait = size.width < size.height;
+    if (_isPortrait != isPortrait) {
+      _calculateSwiperSize();
+      _isPortrait = isPortrait;
     }
     return AnimatedBuilder(
       animation: _animationController,
