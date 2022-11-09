@@ -11,6 +11,7 @@ import 'transformer_page_view/transformer_page_view.dart';
 part 'custom_layout.dart';
 
 typedef SwiperOnTap = void Function(int index);
+typedef OnSwipeByHuman = void Function(int next);
 
 typedef SwiperDataBuilder<T> = Widget Function(
   BuildContext context,
@@ -128,6 +129,8 @@ class Swiper extends StatefulWidget {
 
   final bool allowImplicitScrolling;
 
+  final OnSwipeByHuman? onSwipeByHuman;
+
   const Swiper({
     this.itemBuilder,
     this.indicatorLayout = PageIndicatorLayout.NONE,
@@ -165,6 +168,7 @@ class Swiper extends StatefulWidget {
     this.scale,
     this.fade,
     this.allowImplicitScrolling = false,
+    this.onSwipeByHuman,
   })  : assert(
           itemBuilder != null || transformer != null,
           'itemBuilder and transformItemBuilder must not be both null',
@@ -513,6 +517,7 @@ class _SwiperState extends _SwiperTimerMixin {
         controller: _controller,
         scrollDirection: widget.scrollDirection,
         axisDirection: widget.axisDirection,
+        onSwipeByHuman: widget.onSwipeByHuman,
       );
     } else if (_isPageViewLayout()) {
       //default
@@ -712,6 +717,7 @@ abstract class _SubSwiper extends StatefulWidget {
   final bool loop;
   final Axis? scrollDirection;
   final AxisDirection? axisDirection;
+  final OnSwipeByHuman? onSwipeByHuman;
 
   const _SubSwiper({
     Key? key,
@@ -727,6 +733,7 @@ abstract class _SubSwiper extends StatefulWidget {
     this.scrollDirection = Axis.horizontal,
     this.axisDirection = AxisDirection.left,
     this.onIndexChanged,
+    this.onSwipeByHuman,
   }) : super(key: key);
 
   @override
@@ -827,6 +834,7 @@ class _SliderSwiper extends _SubSwiper {
     required int itemCount,
     Axis? scrollDirection,
     AxisDirection? axisDirection,
+    OnSwipeByHuman? onSwipeByHuman,
   }) : super(
           loop: loop,
           key: key,
@@ -841,6 +849,7 @@ class _SliderSwiper extends _SubSwiper {
           itemCount: itemCount,
           scrollDirection: scrollDirection,
           axisDirection: axisDirection,
+          onSwipeByHuman: onSwipeByHuman,
         );
 
   @override
