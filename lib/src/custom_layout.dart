@@ -6,6 +6,7 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
   double _swiperHeight = 0;
   late Animation<double> _animation;
   late AnimationController _animationController;
+
   SwiperController get _controller => widget.controller;
   late int _startIndex;
   int? _animationCount;
@@ -231,11 +232,13 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
       if (_currentIndex <= 0 && !widget.loop) {
         return;
       }
+      widget.onSwipeByHuman?.call(_currentIndex - 1);
       _move(1.0, nextIndex: _currentIndex - 1);
     } else if (_animationController.value < 0.25 || velocity < -500.0) {
       if (_currentIndex >= widget.itemCount - 1 && !widget.loop) {
         return;
       }
+      widget.onSwipeByHuman?.call(_currentIndex + 1);
       _move(0.0, nextIndex: _currentIndex + 1);
     } else {
       _move(0.5);
