@@ -34,6 +34,7 @@ enum SwiperLayout {
   TINDER,
   CUSTOM,
   SLIDER,
+  SliderTop,
 }
 
 class Swiper extends StatefulWidget {
@@ -519,6 +520,22 @@ class _SwiperState extends _SwiperTimerMixin {
         axisDirection: widget.axisDirection,
         onSwipeByHuman: widget.onSwipeByHuman,
       );
+    } else if (widget.layout == SwiperLayout.SliderTop) {
+      return _SliderTopSwiper(
+        loop: widget.loop,
+        itemWidth: widget.itemWidth,
+        itemHeight: widget.itemHeight,
+        itemCount: widget.itemCount,
+        itemBuilder: itemBuilder,
+        index: _activeIndex,
+        curve: widget.curve,
+        duration: widget.duration,
+        onIndexChanged: _onIndexChanged,
+        controller: _controller,
+        scrollDirection: widget.scrollDirection,
+        axisDirection: widget.axisDirection,
+        onSwipeByHuman: widget.onSwipeByHuman,
+      );
     } else if (_isPageViewLayout()) {
       //default
       var transformer = widget.transformer;
@@ -856,6 +873,43 @@ class _SliderSwiper extends _SubSwiper {
   State<StatefulWidget> createState() => _SliderViewState();
 }
 
+class _SliderTopSwiper extends _SubSwiper {
+  const _SliderTopSwiper({
+    Key? key,
+    required Curve curve,
+    int? duration,
+    required SwiperController controller,
+    ValueChanged<int>? onIndexChanged,
+    double? itemHeight,
+    double? itemWidth,
+    IndexedWidgetBuilder? itemBuilder,
+    int? index,
+    required bool loop,
+    required int itemCount,
+    Axis? scrollDirection,
+    AxisDirection? axisDirection,
+    OnSwipeByHuman? onSwipeByHuman,
+  }) : super(
+          loop: loop,
+          key: key,
+          itemWidth: itemWidth,
+          itemHeight: itemHeight,
+          itemBuilder: itemBuilder,
+          curve: curve,
+          duration: duration,
+          controller: controller,
+          index: index,
+          onIndexChanged: onIndexChanged,
+          itemCount: itemCount,
+          scrollDirection: scrollDirection,
+          axisDirection: axisDirection,
+          onSwipeByHuman: onSwipeByHuman,
+        );
+
+  @override
+  State<StatefulWidget> createState() => _SliderTopSwiperState();
+}
+
 class _TinderState extends _CustomLayoutStateBase<_TinderSwiper> {
   late List<double> scales;
   late List<double> offsetsX;
@@ -1082,7 +1136,69 @@ class _SliderViewState extends _CustomLayoutStateBase<_SliderSwiper> {
         offset: Offset(-fx, -fy),
         child: Transform.scale(
           scale: s,
-          alignment: Alignment.centerRight,
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: widget.itemWidth ?? double.infinity,
+            height: widget.itemHeight ?? double.infinity,
+            child: widget.itemBuilder!(context, realIndex),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SliderTopSwiperState extends _CustomLayoutStateBase<_SliderTopSwiper> {
+  late List<double> scales;
+  late List<double> offsetsX;
+  late List<double> offsetsY;
+  late List<double> opacity;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
+  void _updateValues() {
+    offsetsX = [_swiperWidth, 0, 0, 0, 0];
+    offsetsY = [0.0, 0.0, 40, 80, 120];
+  }
+
+  @override
+  void didUpdateWidget(_SliderTopSwiper oldWidget) {
+    _updateValues();
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void afterRender() {
+    super.afterRender();
+    //length of the values array below
+    _animationCount = 5;
+
+    //Array below this line, '0' index is 1.0, which is the first item show in swiper.
+    _startIndex = -1;
+    scales = [1, 1, 0.9, 0.8, 0.7];
+    opacity = [1.0, 1.0, 1.0, 1, 0.0];
+
+    _updateValues();
+  }
+
+  @override
+  Widget _buildItem(int i, int realIndex, double animationValue) {
+    final s = _getValue(scales, animationValue, i);
+    final fx = _getValue(offsetsX, animationValue, i);
+    final fy = _getValue(offsetsY, animationValue, i);
+    final o = _getValue(opacity, animationValue, i);
+
+    return Opacity(
+      opacity: o,
+      child: Transform.translate(
+        key: ValueKey<int>(_currentIndex + i),
+        offset: Offset(-fx, -fy),
+        child: Transform.scale(
+          scale: s,
+          alignment: Alignment.center,
           child: SizedBox(
             width: widget.itemWidth ?? double.infinity,
             height: widget.itemHeight ?? double.infinity,
