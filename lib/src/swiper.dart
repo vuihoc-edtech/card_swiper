@@ -12,6 +12,7 @@ part 'custom_layout.dart';
 
 typedef SwiperOnTap = void Function(int index);
 typedef OnSwipeByHuman = void Function(int next);
+typedef AnimationValue = void Function(AnimationController animationController);
 
 typedef SwiperDataBuilder<T> = Widget Function(
   BuildContext context,
@@ -132,6 +133,8 @@ class Swiper extends StatefulWidget {
 
   final OnSwipeByHuman? onSwipeByHuman;
 
+  final AnimationValue? animationValue;
+
   const Swiper({
     this.itemBuilder,
     this.indicatorLayout = PageIndicatorLayout.NONE,
@@ -170,6 +173,7 @@ class Swiper extends StatefulWidget {
     this.fade,
     this.allowImplicitScrolling = false,
     this.onSwipeByHuman,
+    this.animationValue,
   })  : assert(
           itemBuilder != null || transformer != null,
           'itemBuilder and transformItemBuilder must not be both null',
@@ -519,6 +523,7 @@ class _SwiperState extends _SwiperTimerMixin {
         scrollDirection: widget.scrollDirection,
         axisDirection: widget.axisDirection,
         onSwipeByHuman: widget.onSwipeByHuman,
+        animationValue: widget.animationValue,
       );
     } else if (widget.layout == SwiperLayout.SliderTop) {
       return _SliderTopSwiper(
@@ -535,6 +540,7 @@ class _SwiperState extends _SwiperTimerMixin {
         scrollDirection: widget.scrollDirection,
         axisDirection: widget.axisDirection,
         onSwipeByHuman: widget.onSwipeByHuman,
+        animationValue: widget.animationValue,
       );
     } else if (_isPageViewLayout()) {
       //default
@@ -735,6 +741,7 @@ abstract class _SubSwiper extends StatefulWidget {
   final Axis? scrollDirection;
   final AxisDirection? axisDirection;
   final OnSwipeByHuman? onSwipeByHuman;
+  final AnimationValue? animationValue;
 
   const _SubSwiper({
     Key? key,
@@ -751,6 +758,7 @@ abstract class _SubSwiper extends StatefulWidget {
     this.axisDirection = AxisDirection.left,
     this.onIndexChanged,
     this.onSwipeByHuman,
+    this.animationValue,
   }) : super(key: key);
 
   @override
@@ -852,6 +860,7 @@ class _SliderSwiper extends _SubSwiper {
     Axis? scrollDirection,
     AxisDirection? axisDirection,
     OnSwipeByHuman? onSwipeByHuman,
+    AnimationValue? animationValue,
   }) : super(
           loop: loop,
           key: key,
@@ -867,6 +876,7 @@ class _SliderSwiper extends _SubSwiper {
           scrollDirection: scrollDirection,
           axisDirection: axisDirection,
           onSwipeByHuman: onSwipeByHuman,
+          animationValue: animationValue,
         );
 
   @override
@@ -889,6 +899,7 @@ class _SliderTopSwiper extends _SubSwiper {
     Axis? scrollDirection,
     AxisDirection? axisDirection,
     OnSwipeByHuman? onSwipeByHuman,
+    AnimationValue? animationValue,
   }) : super(
           loop: loop,
           key: key,
@@ -904,6 +915,7 @@ class _SliderTopSwiper extends _SubSwiper {
           scrollDirection: scrollDirection,
           axisDirection: axisDirection,
           onSwipeByHuman: onSwipeByHuman,
+          animationValue: animationValue,
         );
 
   @override
@@ -1161,7 +1173,7 @@ class _SliderTopSwiperState extends _CustomLayoutStateBase<_SliderTopSwiper> {
 
   void _updateValues() {
     offsetsX = [_swiperWidth, 0, 0, 0, 0];
-    offsetsY = [0.0, 0.0, 40, 80, 120];
+    offsetsY = [0.0, -40, 0, 40, 0];
   }
 
   @override

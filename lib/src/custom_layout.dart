@@ -29,6 +29,7 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
 
   void _createAnimationController() {
     _animationController = AnimationController(vsync: this, value: 0.5);
+    widget.animationValue?.call(_animationController);
     final tween = Tween(begin: 0.0, end: 1.0);
     _animation = tween.animate(_animationController);
   }
