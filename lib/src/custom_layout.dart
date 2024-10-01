@@ -53,8 +53,9 @@ abstract class _CustomLayoutStateBase<T extends _SubSwiper> extends State<T>
   }
 
   bool _calculateSwiperSize() {
-    final renderObject = context.findRenderObject()!;
-    final size = renderObject.paintBounds.size;
+    final renderObject = context.findRenderObject();
+    final size = renderObject?.paintBounds.size;
+    if (size == null) return false;
     if (_swiperWidth != size.width || _swiperHeight != size.height) {
       _swiperWidth = size.width;
       _swiperHeight = size.height;
